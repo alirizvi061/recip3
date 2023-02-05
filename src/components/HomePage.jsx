@@ -1,12 +1,13 @@
 import React from 'react';
-import axios from 'axios';
 import { Configuration, OpenAIApi } from "openai";
 import { useEffect, useState } from 'react';
 
 
 const HomePage = (props) => {
 
-    const [foodList, setFoodList ] = useState()
+    const [foodList, setFoodList ] = useState([])
+    const [foodRecipe, setFoodRecipe ] = useState()
+
     
     const configuration = new Configuration({
         organization: "org-jnhEcz1WhH5kkmNQ5lphlzWb",
@@ -14,50 +15,45 @@ const HomePage = (props) => {
     });
     const openai = new OpenAIApi(configuration);
 
-    const response = async()=>{
+    const getFoods = async()=>{
         let resp = await openai.createCompletion({
             model: "text-davinci-003",
             prompt: "Suggest most popular italian foods",
             temperature: 0,
-            // max_tokens: 7,
+            max_tokens: 256,
         });
 
         // console.log(resp)
-        setFoodList(resp.data.choices[0].text)
+        let respToArr = resp.data.choices[0].text.split("\n")
+
+        setFoodList(respToArr)
     } 
         
+    const getRecipe = async(item)=>{
+        console.log(item)
+        let resp = await openai.createCompletion({
+            model: "text-davinci-003",
+            prompt: `Suggest the best recipe to make ${item}`,
+            temperature: 0,
+            max_tokens: 256,
+        });
+
+        console.log(resp)
+        let respToArr = resp.data.choices[0].text.split("\n")
+
+        setFoodRecipe(respToArr)
+    } 
     useEffect(()=>{
-        response()
+        getFoods()
     })
-
-    // const getCultures = async() => {
-
-    //     let url = "https://api.openai.com/v1/completions";
-    //     const resp = await axios
-    //         .post(url, {
-    //             headers: { 
-    //                 'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-    //                 'Content-Type': 'application/json' 
-    //             },
-    //             params:{
-    //                 model: "text-davinci-beta",
-    //                 prompt: "Say this is a test",
-    //             }
-    //         })
-    //         .then((response)=>{
-    //             console.log(resp)
-    //         })
-    //         .catch((error)=>{
-    //             console.log(error)
-    //         })
-    // }
-
-    console.log(foodList)
 
     return(
         <>
             <div>Welcome to recip3</div>
-            {foodList?foodList:""}
+            {/* <button></button> */}
+            {foodList?foodList.map((item) => {if(item.length > 0){return <button value={item} onClick={(e)=>getRecipe(item)}>{item}</button>}}):""}
+            {/* <div>Instructions</div> */}
+            {foodRecipe?foodRecipe.map((item) => {return <p>{item}</p>}):""}
         </>
     )
 
